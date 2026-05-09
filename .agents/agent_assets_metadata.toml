@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "yjaH6204XrtIoweQNXvNW"
+uri = "file://moslik-analizatori.tar.gz"
+type = "unspecified"
+title = "Moslik Analizatori — loyiha fayllari"
