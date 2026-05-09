@@ -10,13 +10,13 @@ router.post("/admin/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.ADMIN_PASSWORD || process.env.SESSION_SECRET;
   if (!secret || parsed.data.password !== secret) {
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
 
-  res.cookie("moslik_admin", secret, {
+  res.cookie("moslik_admin", "authenticated", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
@@ -33,8 +33,7 @@ router.post("/admin/logout", async (req, res): Promise<void> => {
 
 router.get("/admin/me", async (req, res): Promise<void> => {
   const adminCookie = req.cookies?.["moslik_admin"];
-  const secret = process.env.SESSION_SECRET;
-  if (adminCookie && secret && adminCookie === secret) {
+  if (adminCookie && adminCookie === "authenticated") {
     res.json({ authenticated: true });
   } else {
     res.json({ authenticated: false });
