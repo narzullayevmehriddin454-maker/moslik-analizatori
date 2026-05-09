@@ -1,22 +1,25 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Moslik Analizatori API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: sessions
+    description: Compatibility test sessions
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +27,262 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /sessions:
+    post:
+      operationId: createSession
+      tags: [sessions]
+      summary: Submit a compatibility test result
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionInput"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+    get:
+      operationId: listSessions
+      tags: [admin]
+      summary: List all sessions (admin only)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: lang
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionListResponse"
+        "401":
+          description: Unauthorized
+
+  /sessions/stats:
+    get:
+      operationId: getSessionStats
+      tags: [admin]
+      summary: Get aggregate stats (admin only)
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStats"
+        "401":
+          description: Unauthorized
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCredentials"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleMessage"
+
+  /admin/me:
+    get:
+      operationId: adminMe
+      tags: [admin]
+      summary: Check admin session status
+      responses:
+        "200":
+          description: Auth status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAuthResponse"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    SessionInput:
+      type: object
+      required: [name1, name2, gender1, gender2, dob1, dob2, zodiac1, zodiac2, element1, element2, score, lang]
+      properties:
+        name1:
+          type: string
+        name2:
+          type: string
+        gender1:
+          type: string
+        gender2:
+          type: string
+        dob1:
+          type: string
+        dob2:
+          type: string
+        zodiac1:
+          type: integer
+        zodiac2:
+          type: integer
+        element1:
+          type: string
+        element2:
+          type: string
+        score:
+          type: integer
+        lang:
+          type: string
+        answers:
+          type: ["string", "null"]
+
+    Session:
+      type: object
+      required: [id, name1, name2, gender1, gender2, dob1, dob2, zodiac1, zodiac2, element1, element2, score, lang, createdAt]
+      properties:
+        id:
+          type: integer
+        name1:
+          type: string
+        name2:
+          type: string
+        gender1:
+          type: string
+        gender2:
+          type: string
+        dob1:
+          type: string
+        dob2:
+          type: string
+        zodiac1:
+          type: integer
+        zodiac2:
+          type: integer
+        element1:
+          type: string
+        element2:
+          type: string
+        score:
+          type: integer
+        lang:
+          type: string
+        answers:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        userAgent:
+          type: ["string", "null"]
+        deviceType:
+          type: ["string", "null"]
+        browser:
+          type: ["string", "null"]
+        os:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SessionListResponse:
+      type: object
+      required: [sessions, total, page, limit]
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Session"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    SessionStats:
+      type: object
+      required: [totalSessions, avgScore, highCompatibility, midCompatibility, lowCompatibility, topLanguage, todaySessions]
+      properties:
+        totalSessions:
+          type: integer
+        avgScore:
+          type: integer
+        highCompatibility:
+          type: integer
+        midCompatibility:
+          type: integer
+        lowCompatibility:
+          type: integer
+        topLanguage:
+          type: string
+        todaySessions:
+          type: integer
+        deviceBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        zodiacBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+
+    AdminCredentials:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    AdminAuthResponse:
+      type: object
+      required: [authenticated]
+      properties:
+        authenticated:
+          type: boolean
+
+    SimpleMessage:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string

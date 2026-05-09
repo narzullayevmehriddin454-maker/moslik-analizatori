@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Moslik Analizatori"
+version = "1.0.0"
+id = "artifacts/moslik"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21808
+
+[services.development]
+run = "pnpm --filter @workspace/moslik run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/moslik", "run", "build" ]
+publicDir = "artifacts/moslik/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21808"
+BASE_PATH = "/"
